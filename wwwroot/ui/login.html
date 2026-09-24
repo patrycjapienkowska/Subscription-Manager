@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LifeAdmin – Logowanie</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      font-family: Segoe UI, Roboto, Arial, sans-serif; color: #e7edf8;
+      background: radial-gradient(circle at top, #152340, #0b1220);
+    }
+    .card {
+      width: min(380px, 92vw); background: #121c2f; border: 1px solid #2a3a5a;
+      border-radius: 14px; padding: 22px; box-shadow: 0 8px 20px rgba(0,0,0,.25);
+    }
+    h1 { margin: 0 0 4px; font-size: 1.5rem; }
+    p { color: #9fb0d1; margin: 0 0 16px; }
+    form { display: grid; gap: 10px; }
+    label { display: grid; gap: 6px; color: #9fb0d1; font-size: .93rem; }
+    input, button {
+      width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #2a3a5a;
+      background: #0f182b; color: #e7edf8; font: inherit;
+    }
+    button { background: #63a4ff; border-color: #63a4ff; color: #081224; font-weight: 600; cursor: pointer; }
+    .switch { margin-top: 12px; text-align: center; color: #9fb0d1; font-size: .9rem; }
+    .switch a { color: #63a4ff; cursor: pointer; }
+    .status { min-height: 1.4em; margin-top: 8px; font-size: .92rem; color: #ff8a80; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1 id="title">Logowanie</h1>
+    <p id="subtitle">Zaloguj się, aby zarządzać subskrypcjami.</p>
+    <form id="authForm">
+      <label>Login
+        <input id="username" autocomplete="username" required minlength="3" maxlength="50" />
+      </label>
+      <label>Hasło
+        <input id="password" type="password" autocomplete="current-password" required minlength="6" maxlength="100" />
+      </label>
+      <button id="submitBtn" type="submit">Zaloguj</button>
+    </form>
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+    <div class="switch"><span id="switchText">Nie masz konta?</span> <a id="switchLink">Zarejestruj się</a></div>
+  </main>
+
+  <script>
+    let mode = 'login';
+    const $ = id => document.getElementById(id);
+
+    function setMode(next) {
+      mode = next;
+      const reg = mode === 'register';
+      $('title').textContent = reg ? 'Rejestracja' : 'Logowanie';
+      $('subtitle').textContent = reg ? 'Utwórz konto (hasło min. 6 znaków).' : 'Zaloguj się, aby zarządzać subskrypcjami.';
+      $('submitBtn').textContent = reg ? 'Zarejestruj' : 'Zaloguj';
+      $('switchText').textContent = reg ? 'Masz już konto?' : 'Nie masz konta?';
+      $('switchLink').textContent = reg ? 'Zaloguj się' : 'Zarejestruj się';
+      $('password').autocomplete = reg ? 'new-password' : 'current-password';
+      $('status').textContent = '';
+    }
+
+    $('switchLink').addEventListener('click', () => setMode(mode === 'login' ? 'register' : 'login'));
+
+    $('authForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      $('status').textContent = '';
+      try {
+        const res = await fetch(`/auth/${mode}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: $('username').value.trim(), password: $('password').value })
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          const msg = body.error ?? (body.errors ? Object.values(body.errors).flat().join(' ') : `HTTP ${res.status}`);
+          throw new Error(msg);
+        }
+        location.href = '/ui/index.html';
+      } catch (err) {
+        $('status').textContent = err.message;
+      }
+    });
+
+    // Jeśli już zalogowany – od razu do panelu.
+    fetch('/auth/me').then(r => { if (r.ok) location.href = '/ui/index.html'; });
+  </script>
+</body>
+</html>

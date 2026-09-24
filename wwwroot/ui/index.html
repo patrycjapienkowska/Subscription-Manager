@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LifeAdmin – Subskrypcje</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121c2f;
+      --text: #e7edf8;
+      --muted: #9fb0d1;
+      --border: #2a3a5a;
+      --accent: #63a4ff;
+      --danger: #ef5350;
+      --ok: #3ccf91;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top, #152340, var(--bg));
+      min-height: 100vh;
+      line-height: 1.45;
+    }
+    .wrap {
+      max-width: 1250px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+    h1 { margin: 0 0 6px; font-size: 1.8rem; }
+    p { color: var(--muted); margin: 0 0 14px; }
+    .grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(12, 1fr);
+    }
+    .card {
+      background: color-mix(in srgb, var(--card) 92%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+    .card.full { grid-column: 1 / -1; }
+    .card.form { grid-column: span 3; }
+    .card.list { grid-column: span 9; }
+    @media (max-width: 900px) {
+      .card.form, .card.list { grid-column: 1 / -1; }
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.1rem;
+    }
+    form {
+      display: grid;
+      gap: 10px;
+    }
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 0.93rem;
+      color: var(--muted);
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0f182b;
+      color: var(--text);
+      font: inherit;
+    }
+    button {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #081224;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: transparent;
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    .toolbar input { flex: 1; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th { color: var(--muted); font-weight: 600; }
+    .sort-btn {
+      background: transparent;
+      border: none;
+      color: inherit;
+      padding: 0;
+      width: auto;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sort-indicator {
+      color: #7f95bf;
+      font-size: 0.78rem;
+      min-width: 10px;
+    }
+    .mini {
+      width: auto;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+    }
+    .mini.delete {
+      background: transparent;
+      color: #ffd8d8;
+      border-color: color-mix(in srgb, var(--danger) 50%, var(--border));
+    }
+    .mini.edit {
+      background: transparent;
+      color: #d5e6ff;
+      border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+      margin-right: 6px;
+    }
+    .mini.save {
+      background: #214f88;
+      color: #eef6ff;
+      border-color: #214f88;
+      margin-right: 6px;
+    }
+    .mini.cancel {
+      background: transparent;
+      color: #e7edf8;
+      border-color: var(--border);
+      margin-right: 6px;
+    }
+    .edit-input, .edit-select {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #0f182b;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.86rem;
+    }
+    .status {
+      margin-top: 10px;
+      min-height: 1.4em;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .status.ok { color: var(--ok); }
+    .status.err { color: #ff8a80; }
+    .empty {
+      padding: 16px 8px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .next-payment {
+      display: grid;
+      gap: 6px;
+    }
+    .next-payment .label {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .next-payment .value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #dce9ff;
+    }
+    .next-payment .meta {
+      color: #a9f5d1;
+      font-size: 0.92rem;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .summary-box {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background: #0f182b;
+    }
+    .summary-label {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+    .summary-value {
+      color: #dce9ff;
+      font-size: 1.02rem;
+      font-weight: 700;
+      word-break: break-word;
+    }
+    @media (max-width: 1024px) {
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .badge-today { background: #5c1a1a; color: #ffb4ab; border-color: #ef5350; }
+    .badge-soon { background: #5a3a0c; color: #ffd08a; border-color: #ff9f1a; }
+    .badge-mid { background: #4d4610; color: #fff08a; border-color: #d4c21a; }
+    .badge-far { background: #0f3d2c; color: #a9f5d1; border-color: #3ccf91; }
+    .badge-paused { background: #26304a; color: #9fb0d1; border-color: var(--border); }
+    tr.inactive td { opacity: 0.5; }
+    tr.inactive td:last-child, tr.inactive td.active-cell { opacity: 1; }
+    .mini.toggle-on { background: #0f3d2c; color: #a9f5d1; border-color: #3ccf91; }
+    .mini.toggle-off { background: transparent; color: #9fb0d1; border-color: var(--border); }
+    .reminder-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+    .reminder-list li {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: #0f182b;
+    }
+    .reminder-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .reminder-head h2 { margin: 0; }
+    .actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: nowrap;
+      white-space: nowrap;
+    }
+    .actions .mini {
+      margin: 0;
+      min-width: 72px;
+      text-align: center;
+    }
+    @media (max-width: 620px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+      <h1>LifeAdmin – GUI subskrypcji</h1>
+      <div style="display:flex;align-items:center;gap:10px;color:var(--muted);">
+        <span>Zalogowano: <strong id="currentUser" style="color:var(--text)">…</strong></span>
+        <button id="logoutBtn" class="mini secondary" type="button">Wyloguj</button>
+      </div>
+    </div>
+    <p>Prosty panel do podglądu i dodawania subskrypcji bez Swaggera.</p>
+
+    <section class="grid">
+      <article class="card full" aria-labelledby="next-title">
+        <h2 id="next-title">Najbliższy termin subskrypcji</h2>
+        <div id="nextPayment" class="next-payment">
+          <div class="label">Status</div>
+          <div class="value">Ładowanie...</div>
+          <div class="meta"></div>
+        </div>
+      </article>
+
+      <article class="card full" aria-labelledby="summary-title">
+        <h2 id="summary-title">Podsumowanie kosztów <small id="summaryInfo" style="color:var(--muted);font-weight:400;"></small></h2>
+        <div id="summaryGrid" class="summary-grid">
+          <div class="summary-box">
+            <div class="summary-label">Suma miesięczna</div>
+            <div id="summaryMonthly" class="summary-value">—</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-label">Suma roczna</div>
+            <div id="summaryYearly" class="summary-value">—</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-label">Najbliższe 30 dni (szt.)</div>
+            <div id="summaryUpcomingCount" class="summary-value">—</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-label">Najbliższe 30 dni (koszt)</div>
+            <div id="summaryUpcomingCost" class="summary-value">—</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="card form" aria-labelledby="add-title">
+        <h2 id="add-title">Dodaj subskrypcję</h2>
+        <form id="createForm">
+          <label>
+            Nazwa
+            <input id="name" name="name" required maxlength="120" placeholder="np. Netflix" />
+          </label>
+
+          <label>
+            Data rozpoczęcia (płatność startowa)
+            <input id="startDate" name="startDate" type="date" required />
+          </label>
+
+          <label>
+            Cena
+            <input id="price" name="price" type="number" step="0.01" min="0" value="0" required />
+          </label>
+
+          <label>
+            Waluta
+            <input id="currency" name="currency" value="PLN" minlength="3" maxlength="3" required />
+          </label>
+
+          <label>
+            Cykl
+            <select id="billingCycle" name="billingCycle">
+              <option>Monthly</option>
+              <option>Yearly</option>
+              <option>Weekly</option>
+              <option>Quarterly</option>
+            </select>
+          </label>
+
+          <button type="submit">Dodaj</button>
+        </form>
+      </article>
+
+      <article class="card list" aria-labelledby="list-title">
+        <h2 id="list-title">Subskrypcje</h2>
+
+        <div class="toolbar">
+          <input id="search" placeholder="Szukaj po nazwie..." aria-label="Szukaj po nazwie" />
+          <button id="refreshBtn" class="secondary" type="button">Odśwież</button>
+        </div>
+
+        <div style="overflow:auto;">
+          <table>
+            <thead id="subsHead">
+              <tr>
+                <th><button class="sort-btn" type="button" data-sort-key="id">ID <span class="sort-indicator"></span></button></th>
+                <th><button class="sort-btn" type="button" data-sort-key="name">Nazwa <span class="sort-indicator"></span></button></th>
+                <th><button class="sort-btn" type="button" data-sort-key="startDate">Start płatności <span class="sort-indicator"></span></button></th>
+                <th><button class="sort-btn" type="button" data-sort-key="nextSubscriptionDate">Najbliższa subskrypcja <span class="sort-indicator"></span></button></th>
+                <th><button class="sort-btn" type="button" data-sort-key="status">Termin <span class="sort-indicator"></span></button></th>
+                <th><button class="sort-btn" type="button" data-sort-key="price">Cena <span class="sort-indicator"></span></button></th>
+                <th><button class="sort-btn" type="button" data-sort-key="billingCycle">Cykl <span class="sort-indicator"></span></button></th>
+                <th><button class="sort-btn" type="button" data-sort-key="isActive">Aktywna <span class="sort-indicator"></span></button></th>
+                <th>Akcje</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const rows = document.getElementById('rows');
+    const statusEl = document.getElementById('status');
+    const form = document.getElementById('createForm');
+    const searchInput = document.getElementById('search');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const nextPaymentEl = document.getElementById('nextPayment');
+    const subsHead = document.getElementById('subsHead');
+    const summaryMonthlyEl = document.getElementById('summaryMonthly');
+    const summaryYearlyEl = document.getElementById('summaryYearly');
+    const summaryUpcomingCountEl = document.getElementById('summaryUpcomingCount');
+    const summaryUpcomingCostEl = document.getElementById('summaryUpcomingCost');
+    const summaryInfoEl = document.getElementById('summaryInfo');
+    const COLSPAN = 9;
+
+    function plural(n, one, few, many) {
+      if (n === 1) return one;
+      const d = n % 10, dd = n % 100;
+      return d >= 2 && d <= 4 && (dd < 12 || dd > 14) ? few : many;
+    }
+
+    function describeDays(d) {
+      if (d <= 0) return 'dziś';
+      if (d === 1) return 'jutro';
+      if (d < 14) return `za ${d} dni`;
+      if (d < 60) {
+        const w = Math.round(d / 7);
+        return `za ${w} ${plural(w, 'tydzień', 'tygodnie', 'tygodni')}`;
+      }
+      const m = Math.round(d / 30);
+      return `za ${m} ${plural(m, 'miesiąc', 'miesiące', 'miesięcy')}`;
+    }
+
+    function renderDueBadge(item) {
+      if (!item.isActive) return '<span class="badge badge-paused">wstrzymana</span>';
+      const d = Number(item.daysUntilNext);
+      const cls = d <= 0 ? 'badge-today' : d <= 3 ? 'badge-soon' : d <= 14 ? 'badge-mid' : 'badge-far';
+      return `<span class="badge ${cls}">${describeDays(d)}</span>`;
+    }
+
+    function renderActiveCell(item) {
+      return item.isActive
+        ? `<button class="mini toggle-on" type="button" data-action="toggle" data-id="${item.id}" title="Kliknij, aby wstrzymać">Aktywna</button>`
+        : `<button class="mini toggle-off" type="button" data-action="toggle" data-id="${item.id}" title="Kliknij, aby wznowić">Wstrzymana</button>`;
+    }
+
+    const sortState = {
+      key: 'nextSubscriptionDate',
+      direction: 'asc'
+    };
+
+    let currentItems = [];
+    let editingId = null;
+
+    function setStatus(message, kind = '') {
+      statusEl.textContent = message;
+      statusEl.className = `status ${kind}`.trim();
+    }
+
+    function formatDate(value) {
+      if (!value) return '-';
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return value;
+      return d.toLocaleDateString('pl-PL');
+    }
+
+    function toDateInputValue(value) {
+      if (!value) return '';
+      const source = String(value);
+      const match = source.match(/^\d{4}-\d{2}-\d{2}/);
+      if (match) return match[0];
+
+      const parsed = new Date(source);
+      if (Number.isNaN(parsed.getTime())) return '';
+      return parsed.toISOString().slice(0, 10);
+    }
+
+    function startOfToday() {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      return now;
+    }
+
+    function addToCurrencyMap(map, currency, amount) {
+      const key = String(currency ?? 'PLN').toUpperCase();
+      map[key] = (map[key] ?? 0) + amount;
+    }
+
+    function formatCurrencyMap(map) {
+      const entries = Object.entries(map)
+        .filter(([, value]) => Math.abs(value) > 0.000001)
+        .sort(([a], [b]) => a.localeCompare(b));
+
+      if (!entries.length) return '0.00';
+      return entries
+        .map(([currency, value]) => `${value.toFixed(2)} ${currency}`)
+        .join(' · ');
+    }
+
+    function getCycleFactors(cycle) {
+      switch (cycle) {
+        case 'Weekly':
+          return { monthly: 52 / 12, yearly: 52 };
+        case 'Quarterly':
+          return { monthly: 1 / 3, yearly: 4 };
+        case 'Yearly':
+          return { monthly: 1 / 12, yearly: 1 };
+        case 'Monthly':
+        default:
+          return { monthly: 1, yearly: 12 };
+      }
+    }
+
+    function renderSummaries(items) {
+      const monthlyMap = {};
+      const yearlyMap = {};
+      const upcomingMap = {};
+
+      const today = startOfToday();
+      const in30Days = new Date(today);
+      in30Days.setDate(in30Days.getDate() + 30);
+
+      let upcomingCount = 0;
+      const active = items.filter(i => i.isActive);
+      const paused = items.length - active.length;
+      summaryInfoEl.textContent = paused ? `(aktywne: ${active.length}, wstrzymane: ${paused} – pomijane)` : '';
+
+      active.forEach(item => {
+        const price = Number(item.price) || 0;
+        const factors = getCycleFactors(item.billingCycle);
+        const currency = item.currency;
+
+        addToCurrencyMap(monthlyMap, currency, price * factors.monthly);
+        addToCurrencyMap(yearlyMap, currency, price * factors.yearly);
+
+        const nextDate = new Date(item.nextSubscriptionDate);
+        if (!Number.isNaN(nextDate.getTime()) && nextDate >= today && nextDate <= in30Days) {
+          upcomingCount += 1;
+          addToCurrencyMap(upcomingMap, currency, price);
+        }
+      });
+
+      summaryMonthlyEl.textContent = formatCurrencyMap(monthlyMap);
+      summaryYearlyEl.textContent = formatCurrencyMap(yearlyMap);
+      summaryUpcomingCountEl.textContent = String(upcomingCount);
+      summaryUpcomingCostEl.textContent = formatCurrencyMap(upcomingMap);
+    }
+
+    function resetSummaries() {
+      summaryMonthlyEl.textContent = '—';
+      summaryYearlyEl.textContent = '—';
+      summaryUpcomingCountEl.textContent = '—';
+      summaryUpcomingCostEl.textContent = '—';
+    }
+
+    function renderNextPayment(items) {
+      const today = startOfToday();
+      const upcoming = items
+        .filter(item => item.isActive)
+        .map(item => ({ ...item, parsedDate: new Date(item.nextSubscriptionDate) }))
+        .filter(item => !Number.isNaN(item.parsedDate.getTime()) && item.parsedDate >= today)
+        .sort((a, b) => a.parsedDate - b.parsedDate);
+
+      if (!upcoming.length) {
+        nextPaymentEl.innerHTML = `
+          <div class="label">Status</div>
+          <div class="value">Brak nadchodzących terminów subskrypcji</div>
+          <div class="meta">Dodaj subskrypcję lub popraw daty.</div>
+        `;
+        return;
+      }
+
+      const next = upcoming[0];
+      const when = describeDays(Number(next.daysUntilNext));
+
+      nextPaymentEl.innerHTML = `
+        <div class="label">Najbliższa subskrypcja</div>
+        <div class="value">${escapeHtml(next.name || '(bez nazwy)')} · ${formatDate(next.nextSubscriptionDate)}</div>
+        <div class="meta">${Number(next.price).toFixed(2)} ${escapeHtml(next.currency)} · ${escapeHtml(next.billingCycle)} · ${when}</div>
+      `;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function dateToTime(value) {
+      const parsed = new Date(value ?? '');
+      return Number.isNaN(parsed.getTime()) ? Number.MAX_SAFE_INTEGER : parsed.getTime();
+    }
+
+    function compareText(a, b) {
+      return String(a ?? '').localeCompare(String(b ?? ''), 'pl', { sensitivity: 'base' });
+    }
+
+    function sortItems(items) {
+      const multiplier = sortState.direction === 'asc' ? 1 : -1;
+      return [...items].sort((left, right) => {
+        switch (sortState.key) {
+          case 'id':
+            return multiplier * ((Number(left.id) || 0) - (Number(right.id) || 0));
+          case 'price':
+            return multiplier * ((Number(left.price) || 0) - (Number(right.price) || 0));
+          case 'startDate':
+            return multiplier * (dateToTime(left.startDate) - dateToTime(right.startDate));
+          case 'nextSubscriptionDate':
+            return multiplier * (dateToTime(left.nextSubscriptionDate) - dateToTime(right.nextSubscriptionDate));
+          case 'status': {
+            // wstrzymane zawsze na końcu przy sortowaniu rosnącym
+            const l = left.isActive ? Number(left.daysUntilNext) : Number.MAX_SAFE_INTEGER;
+            const r = right.isActive ? Number(right.daysUntilNext) : Number.MAX_SAFE_INTEGER;
+            return multiplier * (l - r);
+          }
+          case 'isActive':
+            return multiplier * ((right.isActive ? 1 : 0) - (left.isActive ? 1 : 0));
+          case 'billingCycle':
+            return multiplier * compareText(left.billingCycle, right.billingCycle);
+          case 'name':
+          default:
+            return multiplier * compareText(left.name, right.name);
+        }
+      });
+    }
+
+    function refreshSortIndicators() {
+      const buttons = subsHead.querySelectorAll('.sort-btn');
+      buttons.forEach(button => {
+        const indicator = button.querySelector('.sort-indicator');
+        if (!indicator) return;
+
+        if (button.dataset.sortKey === sortState.key)
+          indicator.textContent = sortState.direction === 'asc' ? '▲' : '▼';
+        else
+          indicator.textContent = '';
+      });
+    }
+
+    function getCurrentItemById(id) {
+      return currentItems.find(item => Number(item.id) === Number(id)) ?? null;
+    }
+
+    function renderActions(item) {
+      if (editingId === item.id) {
+        return `<div class="actions">
+          <button class="mini save" type="button" data-action="save" data-id="${item.id}">Zapisz</button>
+          <button class="mini cancel" type="button" data-action="cancel" data-id="${item.id}">Anuluj</button>
+        </div>`;
+      }
+
+      return `<div class="actions">
+        <button class="mini edit" type="button" data-action="edit" data-id="${item.id}">Edytuj</button>
+        <button class="mini delete" type="button" data-action="delete" data-id="${item.id}">Usuń</button>
+      </div>`;
+    }
+
+    function renderNameCell(item) {
+      if (editingId !== item.id)
+        return escapeHtml(item.name);
+
+      return `<input class="edit-input" data-edit-field="name" data-id="${item.id}" value="${escapeHtml(item.name)}" />`;
+    }
+
+    function renderPriceCell(item) {
+      if (editingId !== item.id)
+        return `${Number(item.price).toFixed(2)} ${escapeHtml(item.currency)}`;
+
+      return `<input class="edit-input" data-edit-field="price" data-id="${item.id}" type="number" step="0.01" min="0" value="${Number(item.price).toFixed(2)}" />`;
+    }
+
+    function renderStartDateCell(item) {
+      const startDate = item.startDate;
+      if (editingId !== item.id)
+        return formatDate(startDate);
+
+      return `<input class="edit-input" data-edit-field="startDate" data-id="${item.id}" type="date" value="${toDateInputValue(startDate)}" />`;
+    }
+
+    function renderCycleCell(item) {
+      if (editingId !== item.id)
+        return escapeHtml(item.billingCycle);
+
+      const options = ['Monthly', 'Yearly', 'Weekly', 'Quarterly']
+        .map(cycle => `<option value="${cycle}" ${cycle === item.billingCycle ? 'selected' : ''}>${cycle}</option>`)
+        .join('');
+      return `<select class="edit-select" data-edit-field="billingCycle" data-id="${item.id}">${options}</select>`;
+    }
+
+    async function loadSubscriptions() {
+      const search = searchInput.value.trim();
+      const url = search
+        ? `/subscriptions?search=${encodeURIComponent(search)}&sort=startDate&page=1&pageSize=100`
+        : '/subscriptions?sort=startDate&page=1&pageSize=100';
+
+      try {
+        setStatus('Ładowanie...');
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const payload = await response.json();
+        const items = payload.items ?? [];
+        currentItems = items;
+        renderNextPayment(items);
+        renderSummaries(items);
+        const sortedItems = sortItems(items);
+
+        if (!sortedItems.length) {
+          rows.innerHTML = `<tr><td colspan="${COLSPAN}" class="empty">Brak subskrypcji.</td></tr>`;
+          setStatus('Brak danych.', 'ok');
+          return;
+        }
+
+        rows.innerHTML = sortedItems.map(item => `
+          <tr class="${item.isActive ? '' : 'inactive'}">
+            <td>${item.id}</td>
+            <td>${renderNameCell(item)}</td>
+            <td>${renderStartDateCell(item)}</td>
+            <td>${formatDate(item.nextSubscriptionDate)}</td>
+            <td>${renderDueBadge(item)}</td>
+            <td>${renderPriceCell(item)}</td>
+            <td>${renderCycleCell(item)}</td>
+            <td class="active-cell">${renderActiveCell(item)}</td>
+            <td>
+              ${renderActions(item)}
+            </td>
+          </tr>
+        `).join('');
+
+        setStatus(`Załadowano: ${items.length} z ${payload.total ?? items.length}.`, 'ok');
+      } catch (error) {
+        rows.innerHTML = `<tr><td colspan="${COLSPAN}" class="empty">Nie udało się pobrać danych.</td></tr>`;
+        resetSummaries();
+        nextPaymentEl.innerHTML = `
+          <div class="label">Status</div>
+          <div class="value">Brak danych o najbliższej subskrypcji</div>
+          <div class="meta">Sprawdź połączenie z API.</div>
+        `;
+        setStatus(`Błąd pobierania: ${error.message}`, 'err');
+      }
+    }
+
+    async function createSubscription(event) {
+      event.preventDefault();
+
+      const payload = {
+        name: document.getElementById('name').value.trim(),
+        startDate: document.getElementById('startDate').value,
+        price: Number(document.getElementById('price').value),
+        currency: document.getElementById('currency').value.trim().toUpperCase(),
+        billingCycle: document.getElementById('billingCycle').value
+      };
+
+      try {
+        setStatus('Zapisywanie...');
+        const response = await fetch('/subscriptions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const details = await response.text();
+          throw new Error(details || `HTTP ${response.status}`);
+        }
+
+        form.reset();
+        document.getElementById('currency').value = 'PLN';
+        setStatus('Dodano subskrypcję.', 'ok');
+        await loadSubscriptions();
+      } catch (error) {
+        setStatus(`Błąd zapisu: ${error.message}`, 'err');
+      }
+    }
+
+    async function deleteSubscription(id) {
+      if (!confirm(`Usunąć subskrypcję #${id}?`)) return;
+
+      try {
+        setStatus('Usuwanie...');
+        const response = await fetch(`/subscriptions/${id}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        setStatus('Usunięto subskrypcję.', 'ok');
+        await loadSubscriptions();
+      } catch (error) {
+        setStatus(`Błąd usuwania: ${error.message}`, 'err');
+      }
+    }
+
+    function startEdit(id) {
+      editingId = Number(id);
+      loadSubscriptions();
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      loadSubscriptions();
+    }
+
+    async function saveEdit(id) {
+      const rowItem = getCurrentItemById(id);
+      if (!rowItem) {
+        setStatus('Nie znaleziono rekordu do edycji.', 'err');
+        return;
+      }
+
+      const nameInput = rows.querySelector(`[data-edit-field="name"][data-id="${id}"]`);
+      const dueDateInput = rows.querySelector(`[data-edit-field="startDate"][data-id="${id}"]`);
+      const priceInput = rows.querySelector(`[data-edit-field="price"][data-id="${id}"]`);
+      const cycleSelect = rows.querySelector(`[data-edit-field="billingCycle"][data-id="${id}"]`);
+
+      const nextName = nameInput?.value.trim() ?? '';
+      const nextDueDate = dueDateInput?.value ?? toDateInputValue(rowItem.startDate);
+      const nextPrice = Number(priceInput?.value ?? rowItem.price);
+      const nextCycle = cycleSelect?.value ?? rowItem.billingCycle;
+
+      if (!nextName) {
+        setStatus('Nazwa nie może być pusta.', 'err');
+        return;
+      }
+
+      if (!Number.isFinite(nextPrice) || nextPrice < 0) {
+        setStatus('Cena musi być liczbą większą lub równą 0.', 'err');
+        return;
+      }
+
+      if (!nextDueDate) {
+        setStatus('Nieprawidłowa data startu subskrypcji.', 'err');
+        return;
+      }
+
+      const payload = {
+        name: nextName,
+        startDate: nextDueDate,
+        price: Number(nextPrice.toFixed(2)),
+        currency: String(rowItem.currency ?? 'PLN').toUpperCase(),
+        billingCycle: nextCycle,
+        isActive: rowItem.isActive
+      };
+
+      try {
+        setStatus('Zapisywanie zmian...');
+        const response = await fetch(`/subscriptions/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const details = await response.text();
+          throw new Error(details || `HTTP ${response.status}`);
+        }
+
+        editingId = null;
+        setStatus('Zapisano zmiany.', 'ok');
+        await loadSubscriptions();
+      } catch (error) {
+        setStatus(`Błąd zapisu: ${error.message}`, 'err');
+      }
+    }
+
+    async function toggleActive(id) {
+      const item = getCurrentItemById(id);
+      if (!item) return;
+      try {
+        const response = await fetch(`/subscriptions/${id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isActive: !item.isActive })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        setStatus(item.isActive ? 'Wstrzymano subskrypcję.' : 'Wznowiono subskrypcję.', 'ok');
+        await loadSubscriptions();
+      } catch (error) {
+        setStatus(`Błąd zmiany statusu: ${error.message}`, 'err');
+      }
+    }
+
+    form.addEventListener('submit', createSubscription);
+    refreshBtn.addEventListener('click', loadSubscriptions);
+
+    let searchTimer;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(loadSubscriptions, 250);
+    });
+
+    rows.addEventListener('click', event => {
+      const button = event.target.closest('button[data-id][data-action]');
+      if (!button) return;
+
+      const { id, action } = button.dataset;
+      if (!id || !action) return;
+
+      if (action === 'delete') {
+        deleteSubscription(id);
+        return;
+      }
+
+      if (action === 'toggle') {
+        toggleActive(id);
+        return;
+      }
+
+      if (action === 'edit') {
+        startEdit(id);
+        return;
+      }
+
+      if (action === 'cancel') {
+        cancelEdit();
+        return;
+      }
+
+      if (action === 'save') {
+        saveEdit(id);
+      }
+    });
+
+    subsHead.addEventListener('click', event => {
+      const button = event.target.closest('.sort-btn');
+      if (!button) return;
+
+      const key = button.dataset.sortKey;
+      if (!key) return;
+
+      if (sortState.key === key)
+        sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+      else {
+        sortState.key = key;
+        sortState.direction = 'asc';
+      }
+
+      refreshSortIndicators();
+      loadSubscriptions();
+    });
+
+    // Każda odpowiedź 401 (brak/wygasła sesja) przenosi na stronę logowania.
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = async (...args) => {
+      const response = await originalFetch(...args);
+      if (response.status === 401) location.href = '/ui/login.html';
+      return response;
+    };
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await originalFetch('/auth/logout', { method: 'POST' });
+      location.href = '/ui/login.html';
+    });
+
+    fetch('/auth/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(me => { if (me) document.getElementById('currentUser').textContent = me.username; });
+
+    refreshSortIndicators();
+    loadSubscriptions();
+  </script>
+</body>
+</html>
